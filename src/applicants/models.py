@@ -18,4 +18,4 @@ class Applicant(AbstractBaseUser, BaseModelWithUID):
     skill_title = models.ForeignKey(skill_list, blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
-        return self.email
+        return self.name

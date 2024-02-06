@@ -21,7 +21,7 @@ class Employee(AbstractBaseUser, BaseModelWithUID):
     
 
     def __str__(self):
-        return self.email
+        return self.name
     
 
 class category(BaseModelWithUID):
@@ -43,7 +43,7 @@ class service_type(models.Model):
 class job_post(BaseModelWithUID):
     category = models.ForeignKey(category, max_length=100, on_delete=models.CASCADE)
     service_type = models.ForeignKey(service_type, max_length=100, on_delete=models.CASCADE)
-    company_title = models.CharField(max_length=100, null=True, blank=True)
+    company_title = models.CharField(max_length=200)
     designation = models.CharField(max_length=100, null=True, blank=True)
     vacancy = models.PositiveIntegerField(null=True, blank=True)
     published = models.DateField(null=True, blank=True)

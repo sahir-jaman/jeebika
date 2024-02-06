@@ -18,6 +18,7 @@ from .models import Employee, job_post
 
 
 class PublicEmployeeRegistrationView(ListCreateAPIView):
+    queryset = Employee.objects.all()
     serializer_class = PublicEmployeeRegistrationSerializer
         
 class PublicEmployeeLogin(CreateAPIView):

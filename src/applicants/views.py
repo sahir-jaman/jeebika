@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from .serializers import PublicApplicantRegistrationSerializer, PrivateApplicantProfileSerializer, PublicApplicantLoginSerializer
 from accountio.models import User
+from .models import Applicant
 
 
 
@@ -19,6 +20,7 @@ class PublicUserRegistrationView(CreateAPIView):
         
         
 class PublicUserLoginView(CreateAPIView):
+    queryset = Applicant.objects.all()
     serializer_class = PublicApplicantLoginSerializer
 
     def generate_tokens_for_user(self, user):

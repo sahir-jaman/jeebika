@@ -11,7 +11,7 @@ class PublicEmployeeRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Employee
-        fields = ['name', 'email', 'password', 'confirm_password']
+        fields = ['name', 'email', 'password', 'confirm_password', 'company_name', "company_exp", "company_address", "company_size", "industry_type", "business_desc", "trade_number","rl_number","web_url"]
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -30,6 +30,16 @@ class PublicEmployeeRegistrationSerializer(serializers.ModelSerializer):
         email = validated_data.pop("email", None)
         name = validated_data.pop("name", None)
         
+        #Model Fields
+        company_exp = validated_data.get("company_exp", None)
+        company_addrs= validated_data.get("company_address", None)
+        company_size= validated_data.get("company_size", None)
+        industry_type= validated_data.get("industry_type", None)
+        business_desc= validated_data.get("business_desc", None)
+        trade_number= validated_data.get("trade_number", None)
+        rl_nmbr= validated_data.get("rl_number", None)
+        web_url= validated_data.get("web_url", None)
+        
         if name is None:
             raise serializers.ValidationError({"Error": ["You must have a name!"]})
         if email is not None:
@@ -43,7 +53,19 @@ class PublicEmployeeRegistrationSerializer(serializers.ModelSerializer):
                 password=password,
                 type=UserType.EMPLOYEE,
             )
-            employee = Employee.objects.create(user=user, name=name, password=make_password(password))
+            employee = Employee.objects.create(
+                user=user,
+                name=name,
+                password=make_password(password),
+                company_exp=company_exp,
+                company_address=company_addrs,
+                company_size=company_size,
+                industry_type=industry_type,
+                business_desc=business_desc,
+                trade_number=trade_number,
+                rl_number=rl_nmbr,
+                web_url=web_url,
+            )
             
             return employee
 
