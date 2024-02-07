@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-from django.core.validators import MinLengthValidator
 
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -10,7 +9,7 @@ from common.choices import UserType
 
 # user manageer
 class UserManager(BaseUserManager):
-    def create_user(self, email, username, password=None, confirm_password=None, type=None, phone=None):
+    def create_user(self,name, email, username, password=None, confirm_password=None, type=None, phone=None):
         """
         Creates and saves a User with the given email, date of
         birth and password.
@@ -19,6 +18,7 @@ class UserManager(BaseUserManager):
             raise ValueError("Users must have an email address")
 
         user = self.model(
+            name=name,
             username = username,
             email=self.normalize_email(email),
             type=type,
@@ -29,13 +29,14 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, username, password=None):
+    def create_superuser(self, email, username, password=None,name=None):
         """
         Creates and saves a superuser with the given email, date of
         birth and password.
         """
         user = self.create_user(
-            email,
+            name=name,
+            email=email,
             username=username,
             password=password,
         )

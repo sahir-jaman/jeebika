@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
 from common.models import BaseModelWithUID
-from accountio.models import UserManager
 from accountio.models import User
 from common.choices import CompanySize
 
@@ -37,7 +36,6 @@ class category(BaseModelWithUID):
     
     def __str__(self):
         return self.name
-    
     
     
     

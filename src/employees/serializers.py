@@ -8,7 +8,13 @@ from django.contrib.auth.hashers import make_password
 class PublicUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["username", "email"]
+        fields = ["name", "username", "email", "phone"]
+        
+    def validate(self, attrs):
+        username = attrs.get('username')
+        if len(username)<4:
+            raise serializers.ValidationError({"Error": ["username must be greated than 4 and less than 12!"]}) # 12 size is fixed in the model
+        return attrs
 
 class PublicEmployeeRegistrationSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField(style={'input_type': 'password'}, write_only=True)
@@ -79,4 +85,4 @@ class PrivateEmployeeProfileSerializer(serializers.ModelSerializer):
 class PrivateEmployeePostSerializer(serializers.ModelSerializer):
     class Meta:
         model = job_post
-        fields = "__all__"
+        fields = ['uid', 'company_title', 'category', 'service_type', 'designation', 'vacancy', 'published', 'deadline', 'responsibilities', 'employment_status', 'skill', 'requirements','expertise', 'experience', 'location', 'company_info','compensation', 'apply_procedure' ]

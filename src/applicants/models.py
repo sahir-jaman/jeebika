@@ -9,6 +9,9 @@ from accountio.models import User
 
 class skill_list(BaseModelWithUID):
     skill_name = models.CharField(max_length=100)
+    
+    def __str__(self):
+        return self.skill_name
 
 # Create your models here.
 class Applicant(AbstractBaseUser, BaseModelWithUID):
