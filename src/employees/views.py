@@ -10,6 +10,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.filters import SearchFilter
 
 from .serializers import PublicEmployeeRegistrationSerializer, PrivateEmployeeProfileSerializer, PublicEmployeeLoginSerializer, PrivateEmployeePostSerializer
 from accountio.models import User
@@ -79,11 +80,14 @@ class PrivateEmployeeProfile(RetrieveUpdateAPIView):
 class PrivateEmployeeposts(ListCreateAPIView):
     serializer_class = PrivateEmployeePostSerializer
     permission_classes = [IsAuthenticated, IsEmployeeUser]
+    filter_backends = [SearchFilter]
+    search_fields = ["category__name"]
+    
     queryset = job_post.objects.all()
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()  # This will create a new job_post object with the data from the request
+        serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class PrivateEmployeePostDetail(RetrieveUpdateDestroyAPIView):
