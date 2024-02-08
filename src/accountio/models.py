@@ -9,7 +9,7 @@ from common.choices import UserType
 
 # user manageer
 class UserManager(BaseUserManager):
-    def create_user(self, email, password=None, confirm_password=None, type=None, phone=None):
+    def create_user(self,name, email, username, password=None, confirm_password=None, type=None, phone=None):
         """
         Creates and saves a User with the given email, date of
         birth and password.
@@ -18,6 +18,8 @@ class UserManager(BaseUserManager):
             raise ValueError("Users must have an email address")
 
         user = self.model(
+            name=name,
+            username = username,
             email=self.normalize_email(email),
             type=type,
             phone=phone
@@ -27,13 +29,15 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password=None):
+    def create_superuser(self, email, username, password=None,name=None):
         """
         Creates and saves a superuser with the given email, date of
         birth and password.
         """
         user = self.create_user(
-            email,
+            name=name,
+            email=email,
+            username=username,
             password=password,
         )
         user.is_admin = True
@@ -43,6 +47,8 @@ class UserManager(BaseUserManager):
 
 # Create your models here.
 class User(AbstractBaseUser, BaseModelWithUID):
+    name = models.CharField(max_length=200, blank=True, null=True)
+    username = models.CharField(max_length=12, unique=True)
     email = models.EmailField(verbose_name="email address",max_length=255,unique=True)
     phone = PhoneNumberField(blank=True,null=True)
     type =  models.CharField(max_length=20, choices=UserType.choices, blank=True, null=True)
@@ -53,7 +59,7 @@ class User(AbstractBaseUser, BaseModelWithUID):
     objects = UserManager()
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ["username"]
 
     def __str__(self):
         return self.email

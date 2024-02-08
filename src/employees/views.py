@@ -10,6 +10,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.filters import SearchFilter
 
 from .serializers import PublicEmployeeRegistrationSerializer, PrivateEmployeeProfileSerializer, PublicEmployeeLoginSerializer, PrivateEmployeePostSerializer
 from accountio.models import User
@@ -17,7 +18,7 @@ from common.permissions import IsEmployeeUser
 from .models import Employee, job_post
 
 
-class PublicEmployeeRegistrationView(ListCreateAPIView):
+class PublicEmployeeRegistrationView(CreateAPIView):
     serializer_class = PublicEmployeeRegistrationSerializer
         
 class PublicEmployeeLogin(CreateAPIView):
@@ -53,28 +54,44 @@ class PublicEmployeeLogin(CreateAPIView):
         
 class PrivateEmployeeProfile(RetrieveUpdateAPIView):
     serializer_class = PrivateEmployeeProfileSerializer
-    authentication_classes = [JWTAuthentication]
-        
+    permission_classes = [IsAuthenticated]
+
     def get_object(self):
-        # Access the related Applicant object of the current user
+        # Access the related Employee object of the current user
         employee = self.request.user.employee
         return employee
+
+    def update(self, request, *args, **kwargs):
+        # Ensure that only PATCH requests are allowed
+        if request.method != 'PATCH':
+            return Response({'error': 'Only GET & PATCH method is allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        
+        # Retrieve the Employee object
+        instance = self.get_object()
+        
+        # Serialize the instance with data from the request
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        return Response(serializer.data)
     
     
 class PrivateEmployeeposts(ListCreateAPIView):
     serializer_class = PrivateEmployeePostSerializer
-    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsEmployeeUser]
+    filter_backends = [SearchFilter]
+    search_fields = ["category__name"]
+    
     queryset = job_post.objects.all()
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()  # This will create a new job_post object with the data from the request
+        serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class PrivateEmployeePostDetail(RetrieveUpdateDestroyAPIView):
     serializer_class = PrivateEmployeePostSerializer
-    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, IsEmployeeUser]
     queryset = job_post.objects.all()
     

@@ -10,57 +10,39 @@ logger = logging.getLogger(__name__)
 from applicants.models import Applicant
 from accountio.models import User
 from common.choices import UserType
-
-
+from employees.serializers import PublicUserSerializer
 
 class PublicApplicantRegistrationSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField(style={'input_type': 'password'}, write_only=True)
-    email = serializers.CharField(write_only=True, required=True)
+    user = PublicUserSerializer()  # Assuming you have defined PublicUserSerializer
 
     class Meta:
         model = Applicant
-        fields = ['name', 'email', 'password', 'confirm_password']
+        fields = ['user', 'password', 'confirm_password', 'gender', 'skill_title']
         extra_kwargs = {
             'password': {'write_only': True}
         }
 
-    def validate(self, attrs):
-        password = attrs.get('password')
-        password2 = attrs.get('confirm_password')
+        def validate(self, attrs):
+            password = attrs.get('password')
+            confirm_password = attrs.get('confirm_password')
+            if password != confirm_password:
+                raise serializers.ValidationError({"Error": ["Passwords do not match!"]})
+            return attrs
 
-        if password != password2:
-            raise serializers.ValidationError({"Error": ["Passwords do not match!"]})
-
-        return attrs
 
     def create(self, validated_data):
-        password = validated_data.pop("password")
-        email = validated_data.pop("email", None)
-        name = validated_data.pop("name", None)
-        
-        if name is None:
-            raise serializers.ValidationError({"Error": ["You must have a name!"]})
-        if email is not None:
-            email_existance = User.objects.filter(email = email)
-            if email_existance:
-                raise serializers.ValidationError({"Error": ["This email already exists!"]})
+        user_data = validated_data.pop('user')
+        password = validated_data.pop('password')
+        confirm_password = validated_data.pop('confirm_password')
+        if password != confirm_password:
+            raise serializers.ValidationError({"Error": ["Passwords do not match!"]})
+        user = User.objects.create_user(**user_data, password=password, type=UserType.APPLICANT)
+        Applicant.objects.create(user=user,password=make_password(password), **validated_data)
+        return user
 
-        try:
-            user = User.objects.create_user(
-                email=email,
-                password=password,
-                type=UserType.APPLICANT,
-            )
-            applicant = Applicant.objects.create(user=user, name=name, password=make_password(password))
-            
-            return applicant
-
-        except Exception as e:
-            logger.error(f"Registration failed. Error: {str(e)}")
-            raise serializers.ValidationError({"Error": ["Sorry, Registration failed!"]})
-        
     def to_representation(self, instance):
-        payload = {"message": f"Registration successful for {instance.name}."}
+        payload = {"message": f"Registration successful for {instance.username}."}
         return payload
 
     
@@ -74,11 +56,22 @@ class PublicApplicantLoginSerializer(serializers.ModelSerializer):
 class PrivateUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['email', 'phone', 'type']
+        fields = ['email','username','name', 'phone', 'type']
 
 class PrivateApplicantProfileSerializer(serializers.ModelSerializer):
     user = PrivateUserSerializer()
 
     class Meta:
         model = Applicant
-        fields = ["uid", "name", "user"]
+        fields = ["uid", "user", 'gender', 'skill_title']
+        
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop('user', None)
+        if user_data:
+            user_serializer = PrivateUserSerializer(instance.user, data=user_data, partial=True)
+            if user_serializer.is_valid():
+                user_serializer.save()
+            else:
+                raise serializers.ValidationError(user_serializer.errors)
+
+        return super().update(instance, validated_data)

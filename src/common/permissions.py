@@ -9,4 +9,4 @@ class IsEmployeeUser(BasePermission):
     """
 
     def has_permission(self, request, view):
-        return request.user.type == UserType.EMPLOYEE
+        return request.user.type == UserType.EMPLOYER
